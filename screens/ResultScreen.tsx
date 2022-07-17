@@ -8,17 +8,17 @@ import {
   Pressable,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ScoreBoard from '../components/ScoreBoard';
+import {storageData} from '../components/types';
+
 interface screenProps {
   route: {params: {currentScore: number}};
+  navigation: any;
 }
-type storageData = {
-  name: string;
-  score: number;
-};
 
-export default ({route}: screenProps) => {
-  const [isModalOpen, setIsOpenModal] = useState(false);
-  const [text, onChangeText] = useState('');
+export default ({route, navigation}: screenProps) => {
+  const [isModalOpen, setIsOpenModal] = useState<boolean>(false);
+  const [text, onChangeText] = useState<string>('');
   const [currentResult, setCurrentResult] = useState<storageData>({
     name: '',
     score: 0,
@@ -28,24 +28,27 @@ export default ({route}: screenProps) => {
 
   useEffect(() => {
     setIsOpenModal(true);
-    setCurrentResult({name: '', score: 0});
   }, []);
 
   useEffect(() => {
     const getAndUpdateResults = async () => {
-      const results: storageData[] | null = JSON.parse(
-        (await AsyncStorage.getItem('results')) || '',
-      );
-      if (results) {
+      const res = await AsyncStorage.getItem('results');
+      if (res) {
+        let results: storageData[] = JSON.parse(res);
         results.push(currentResult);
         results.sort((a, b) => {
           if (a.score > b.score) {
-            return 1;
+            return -1;
           }
-          return -1;
+          return 1;
         });
+        if (results.length > 9) {
+          results = results.slice(0, 10);
+        }
         setAllResults(results);
         await AsyncStorage.setItem('results', JSON.stringify(results));
+      } else {
+        await AsyncStorage.setItem('results', JSON.stringify([currentResult]));
       }
     };
     getAndUpdateResults().then(() => {
@@ -53,13 +56,19 @@ export default ({route}: screenProps) => {
     });
   }, [currentResult]);
   const closeModal = async () => {
+    if (text.length < 2) {
+      return;
+    }
     setIsOpenModal(!isModalOpen);
     setCurrentResult({name: text, score: currentScore});
-    console.log(allResults);
   };
   return (
     <View style={styles.container}>
-      <Text style={styles.modalText}>allResults</Text>
+      <ScoreBoard
+        navigation={navigation}
+        allResults={allResults}
+        visible={!isModalOpen}
+      />
       <Modal animationType="slide" transparent={true} visible={isModalOpen}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
@@ -69,9 +78,7 @@ export default ({route}: screenProps) => {
               maxLength={20}
               style={styles.input}
             />
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={closeModal}>
+            <Pressable style={[styles.button]} onPress={closeModal}>
               <Text style={styles.textStyle}>Confirm</Text>
             </Pressable>
           </View>
@@ -82,6 +89,7 @@ export default ({route}: screenProps) => {
 };
 const styles = StyleSheet.create({
   container: {},
+
   centeredView: {
     flex: 1,
     justifyContent: 'center',
@@ -116,11 +124,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     elevation: 2,
-  },
-  buttonOpen: {
-    backgroundColor: '#F194FF',
-  },
-  buttonClose: {
     backgroundColor: '#2196F3',
   },
   textStyle: {
