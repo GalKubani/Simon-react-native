@@ -9,7 +9,15 @@ export const GameNavigator = () => {
   return (
     <NavigationContainer>
       <MainStackNavigator.Navigator>
-        <MainStackNavigator.Screen name="Game Screen" component={GameScreen} />
+        <MainStackNavigator.Screen
+          name="Game Screen"
+          component={GameScreen}
+          options={{
+            title: 'Welcome to Simon',
+            headerStyle: {backgroundColor: 'black'},
+            headerTitleStyle: {color: 'white'},
+          }}
+        />
         <MainStackNavigator.Screen
           name="Result Screen"
           component={ResultScreen}

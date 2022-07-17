@@ -1,13 +1,10 @@
 import React, {useState} from 'react';
-import {Text, View, StyleSheet, Dimensions} from 'react-native';
+import {Text, View, StyleSheet} from 'react-native';
 import GameLayout from '../components/GameLayout';
 export default ({navigation}: any) => {
   const [currentScore, setCurrentScore] = useState<number>(0);
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Welcome to Simon</Text>
-      </View>
       <Text style={styles.paragraph}>Current score: {currentScore}</Text>
       <View style={styles.circle}>
         <GameLayout
@@ -30,19 +27,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ecf0f1',
     padding: 8,
   },
-  header: {
-    position: 'absolute',
-    height: 100,
-    top: 0,
-    width: Dimensions.get('window').width,
-    padding: 20,
-    backgroundColor: 'black',
-  },
-  title: {
-    fontSize: 30,
-    color: 'white',
-    textAlign: 'center',
-  },
   circle: {
     height: 310,
     width: 310,
@@ -53,7 +37,7 @@ const styles = StyleSheet.create({
   },
   paragraph: {
     margin: 24,
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
   },
