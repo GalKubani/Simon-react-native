@@ -7,29 +7,71 @@ import {
   TextInput,
   Pressable,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 interface screenProps {
   route: {params: {currentScore: number}};
 }
+type storageData = {
+  name: string;
+  score: number;
+};
 
 export default ({route}: screenProps) => {
   const [isModalOpen, setIsOpenModal] = useState(false);
-  // once modal closes, need to add name to high scores, via async storage
+  const [text, onChangeText] = useState('');
+  const [currentResult, setCurrentResult] = useState<storageData>({
+    name: '',
+    score: 0,
+  });
+  const [allResults, setAllResults] = useState<storageData[] | []>([]);
   const {currentScore} = route.params;
 
   useEffect(() => {
     setIsOpenModal(true);
+    setCurrentResult({name: '', score: 0});
   }, []);
+
+  useEffect(() => {
+    const getAndUpdateResults = async () => {
+      const results: storageData[] | null = JSON.parse(
+        (await AsyncStorage.getItem('results')) || '',
+      );
+      if (results) {
+        results.push(currentResult);
+        results.sort((a, b) => {
+          if (a.score > b.score) {
+            return 1;
+          }
+          return -1;
+        });
+        setAllResults(results);
+        await AsyncStorage.setItem('results', JSON.stringify(results));
+      }
+    };
+    getAndUpdateResults().then(() => {
+      console.log('updated results');
+    });
+  }, [currentResult]);
+  const closeModal = async () => {
+    setIsOpenModal(!isModalOpen);
+    setCurrentResult({name: text, score: currentScore});
+    console.log(allResults);
+  };
   return (
     <View style={styles.container}>
-      <Text />
+      <Text style={styles.modalText}>allResults</Text>
       <Modal animationType="slide" transparent={true} visible={isModalOpen}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Whats your name?</Text>
-            <TextInput maxLength={20} style={styles.input} editable={true} />
+            <TextInput
+              onChangeText={onChangeText}
+              maxLength={20}
+              style={styles.input}
+            />
             <Pressable
               style={[styles.button, styles.buttonClose]}
-              onPress={() => setIsOpenModal(!isModalOpen)}>
+              onPress={closeModal}>
               <Text style={styles.textStyle}>Confirm</Text>
             </Pressable>
           </View>
